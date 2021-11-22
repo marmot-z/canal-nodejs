@@ -1,3 +1,5 @@
+const EventEmitter = require('events');
+
 class CanalConnector {
     connect() {
         throw new Error('Unsupported operation.');
@@ -35,5 +37,7 @@ class CanalConnector {
         throw new Error('Unsupported operation.');
     }
 }
+
+Object.assign(CanalConnector.prototype, EventEmitter);
 
 module.exports = CanalConnector;

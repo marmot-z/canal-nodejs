@@ -1,3 +1,5 @@
+let SimpleCanalConnector = require('./simple-canal-connector');
+
 class CanalConnectors {
 
     /**
@@ -5,17 +7,20 @@ class CanalConnectors {
      * 
      * 当address为数组时，当其中一个Canal服务节点宕机，可以支持failover到其他正常Canal服务节点上
      * 
-     * @param {Array|String} address Canal服务地址或列表
+     * @param {String} host Canal服务ip
+     * @param {Number} port Canal服务端口
      * @param {String} destination Canal destination
      * @param {String} username 用户名
      * @param {String} password 密码
      * @returns 
      */
-    newConnector(address, destination, username, password) {
-        return null;
+    static newConnector(host, port, destination, username, password) {
+        return new SimpleCanalConnector(host, port, destination, username, password);
     }
 
-    newClusterConnector(zkServers, destination, username, password) {
+    static newClusterConnector(zkServers, destination, username, password) {
         return null;
     }
 }
+
+module.exports = CanalConnectors;
