@@ -1,16 +1,11 @@
 const CanalConnectors = require('../canal-connectors');
 const ProtoUtil = require('../proto-util');
 
-const host = '127.0.0.1';
-const port = 11111;
-const destination = 'example';
-const username = '';
-const password = '';
-
 ;(async function() {
     await ProtoUtil.load();
 
-    let connector = CanalConnectors.newConnector(process.env.host, process.env.port, process.env.destination, process.env.username, process.env.password);
+    let connector = CanalConnectors.newConnector(process.env.host, process.env.port, 
+            process.env.destination, process.env.username, process.env.password);
 
     // 连接 & 订阅
     await connector.connect();

@@ -17,5 +17,5 @@ export destination=$destination
 export username=$username
 export password=$password
 
-shell_full_path="$(cd "$(dirname "$0")"; pwd)/quick-start.js"
-/usr/local/bin/node $shell_full_path
+full_path="$(cd "$(dirname "$0")"; pwd)/quick-start.js"
+/usr/local/bin/node $full_path
