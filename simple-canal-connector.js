@@ -132,7 +132,7 @@ class SimpleCanalConnector extends CanalConnector {
                 
                 this.connected = true;
 
-                resolve('a');
+                resolve();
             });
         });
     }
@@ -202,7 +202,7 @@ class SimpleCanalConnector extends CanalConnector {
 
     disconnect() {
         if (this.running && this.connected) {
-            this.socket.distory();
+            this.socket.destroy();
             this.socket = null;
             this.connected = false;
             this.running = false;
