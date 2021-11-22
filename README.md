@@ -37,7 +37,7 @@
    # -p canal server 监听端口
    # -d canal server destination
    # -u 登录名
-   # -p 密码
+   # -pw 密码
    ./example/start.sh -h 127.0.0.1 -p 11111 -d example
    ```
 
