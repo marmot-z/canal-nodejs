@@ -38,6 +38,6 @@ class CanalConnector {
     }
 }
 
-Object.assign(CanalConnector.prototype, EventEmitter);
+Object.assign(CanalConnector.prototype, EventEmitter.prototype);
 
 module.exports = CanalConnector;

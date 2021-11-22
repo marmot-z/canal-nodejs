@@ -25,12 +25,15 @@ class ProtoUtil {
         ProtoUtil.enums.Sub = root.lookupType('Sub'); 
         ProtoUtil.enums.Unsub = root.lookupType('Unsub'); 
         ProtoUtil.enums.Get = root.lookupType('Get'); 
+        ProtoUtil.enums.Messages = root.lookupType('Messages'); 
+        ProtoUtil.enums.ClientAck = root.lookupType('ClientAck'); 
         ProtoUtil.PacketType = root.lookupEnum('PacketType');
         ProtoUtil.Compression = root.lookupEnum('Compression');
     }
 
     static initEntryProtobuf(root) {
         ProtoUtil.enums.Entry = root.lookupType('Entry');
+        ProtoUtil.enums.RowChange = root.lookupType('RowChange');
         ProtoUtil.EventType = root.lookupEnum('EventType');
         ProtoUtil.EntryType = root.lookupEnum('EntryType');
     }

@@ -1,9 +1,8 @@
 const net = require('net');
 const async = require('async');
 const CanalConnector = require('./canal-connector');
-const ProroUtil = require('./proto-util');
+const ProtoUtil = require('./proto-util');
 const CanalMessageDeserializer = require('./canal-message-deserializer');
-const { time } = require('console');
 
 class SimpleCanalConnector extends CanalConnector {
     // 是否连接
@@ -17,8 +16,6 @@ class SimpleCanalConnector extends CanalConnector {
     idleTimeout = 60 * 60 * 1000;
     // 数据块缓存区
     chunks;
-    // 缓冲区长度
-    size = 0;
 
     // 数据读写时的header
     readHeader = Buffer.alloc(4);
@@ -67,13 +64,13 @@ class SimpleCanalConnector extends CanalConnector {
                 (callback) => {
                     this.readNextPacket()
                         .then(data => {
-                            let packet = ProroUtil.decode(ProroUtil.enums.Packet, data);
+                            let packet = ProtoUtil.decode(ProtoUtil.enums.Packet, data);
                             let err;
     
                             if (packet.version != 1) {
                                 err = new Error('Unsupported version at this client.');
                             }
-                            if (packet.type != ProroUtil.PacketType.values.HANDSHAKE) {
+                            if (packet.type != ProtoUtil.PacketType.values.HANDSHAKE) {
                                 err = new Error('Expect handshake but found other type.');
                             }
     
@@ -81,7 +78,7 @@ class SimpleCanalConnector extends CanalConnector {
                                 callback(err);
                             }
     
-                            let handshake = ProroUtil.decode(ProroUtil.enums.Handshake, packet.body);
+                            let handshake = ProtoUtil.decode(ProtoUtil.enums.Handshake, packet.body);
                             this.supportedCompressions = handshake.supportedCompressions;
                             
                             callback(null, handshake.seeds);
@@ -92,14 +89,14 @@ class SimpleCanalConnector extends CanalConnector {
                     // TODO 使用 com.alibaba.otter.canal.protocol.SecurityUtil#byte2HexStr 生成密码
                     let newPasswd = this.password ? this.password : this.password;
                     
-                    let clientAuth = ProtoUtil.encode(ProroUtil.enums.ClientAuth, {
+                    let clientAuth = ProtoUtil.encode(ProtoUtil.enums.ClientAuth, {
                         username: this.username ? this.username : '',
                         password: Buffer.from(newPasswd ? newPasswd : '', 'utf-8'),
                         netReadTimeout: this.idleTimeout,
                         netReadTimeout: this.idleTimeout
                     });
-                    let packet = ProtoUtil.encode(ProroUtil.enums.Packet, {
-                        type: ProroUtil.PacketType.values.CLIENTAUTHENTICATION,
+                    let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
+                        type: ProtoUtil.PacketType.values.CLIENTAUTHENTICATION,
                         body: clientAuth
                     });
     
@@ -111,14 +108,14 @@ class SimpleCanalConnector extends CanalConnector {
                 (callback) => {
                     this.readNextPacket()
                         .then(data => {
-                            let ack = ProroUtil.decode(ProroUtil.enums.Packet, data);
+                            let ack = ProtoUtil.decode(ProtoUtil.enums.Packet, data);
                             let err;
     
-                            if (ack.type != ProroUtil.PacketType.values.ACK) {
+                            if (ack.type != ProtoUtil.PacketType.values.ACK) {
                                 err = new Error('Unexpected packet type when ack is expected.');
                             }
                             
-                            let ackBody = ProroUtil.decode(ProroUtil.enums.Ack, ack.body);
+                            let ackBody = ProtoUtil.decode(ProtoUtil.enums.Ack, ack.body);
     
                             if (ackBody.errorCode > 0) {
                                 err = new Error('Something goes wrong when doing authentication:', ackBody.errorMessage);
@@ -228,7 +225,7 @@ class SimpleCanalConnector extends CanalConnector {
 
         let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.GET,
-            body: ProtoUtil.encode(ProtoUtil.enums.GET, {
+            body: ProtoUtil.encode(ProtoUtil.enums.Get, {
                 autoAck: false,
                 destination: this.clientIdentity.destination,
                 clientId: this.clientIdentity.id + '',
@@ -241,7 +238,7 @@ class SimpleCanalConnector extends CanalConnector {
         
         this.write(packet);
 
-        return receiveMessage();
+        return this.receiveMessage();
     }
 
     ack(batchId) {
@@ -334,6 +331,10 @@ class SimpleCanalConnector extends CanalConnector {
 
     handleConnectError(err) {
         this.emit('error', err);
+    }
+
+    isRunning() {
+        return this.running;
     }
 }
 
