@@ -11,9 +11,9 @@ do
     esac
 done
 
-export host=$host
-export port=$port 
-export destination=$destination
+export host=${host:=127.0.0.1}
+export port=${port:=11111} 
+export destination=${destination:=example}
 export username=$username
 export password=$password
 

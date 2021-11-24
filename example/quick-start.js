@@ -23,7 +23,6 @@ const ProtoUtil = require('../proto-util');
 
             // 无数据
             if (batchId === -1 || !size) {
-                console.log('Empty message.');
                 await sleep(3_000);
             } 
             // 打印数据
