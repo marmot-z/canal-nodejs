@@ -55,12 +55,18 @@ function printEntry(entries) {
 
         for (let rowData of rowChage.rowDatas) {
             if (rowChage.eventType == ProtoUtil.EventType.values.DELETE) {
+                console.log('Delete: ');
                 printColumns(rowData.beforeColumns);
+                console.log('----------------------');
             } else if (rowChage.eventType == ProtoUtil.EventType.values.INSERT) {
+                console.log('Insert: ');
                 printColumns(rowData.afterColumns);
+                console.log('----------------------');
             } else {
+                console.log('Update: ');
                 printColumns(rowData.beforeColumns);
                 printColumns(rowData.afterColumns);
+                console.log('----------------------');
             }
         }
     }
