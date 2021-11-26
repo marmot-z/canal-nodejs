@@ -7,37 +7,33 @@ const ProtoUtil = require('../proto-util');
     let connector = CanalConnectors.newConnector(process.env.host, process.env.port, 
             process.env.destination, process.env.username, process.env.password);
 
-    // 连接 & 订阅
-    await connector.connect();
-    await connector.subscribe('.*\..*');
-    // await connector.unsubscribe();
-    // connector.rollback();
     connector.on('error', console.error);
 
-    // 获取
-    try{
-        while (true) {
-            let message = await connector.getWithoutAck();
+    connector.connect((err) => {
+        if (err) throw err;
+
+        let callback = (err, message) => {
+            if (err) throw err;
+
             let batchId = parseInt(message.id);
             let size = message.entries.length;
 
-            // 无数据
-            if (batchId === -1 || !size) {
-                await sleep(3_000);
-            } 
-            // 打印数据
-            else {
+            if (batchId !== -1 && size) {
                 printEntry(message.entries);
             }
 
-            // 发送回执
             connector.ack(batchId);
-        }
-    } catch(err) {
-        console.error('Get message occor a error:', err);
-    } finally {
-        if (connector.isRunning()) connector.disconnect();
-    }
+            setTimeout(connector.getWithoutAck.bind(connector, 10, -1, callback), 3_000);
+        };
+
+        connector.subscribe('.*\..*', (err) => {
+            if (err) throw err;
+
+            connector.getWithoutAck(10, -1, callback);
+        });
+        // connector.unsubscribe();
+        // connector.rollback();
+    });
 }) ();
 
 function printEntry(entries) {
@@ -76,8 +72,4 @@ function printColumns(columns) {
     for (let column of columns) {
         console.log(`${column.name} : ${column.value}   update = ${column.updated}`);
     }
-}
-
-function sleep(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
 }
