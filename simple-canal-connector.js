@@ -138,7 +138,7 @@ class SimpleCanalConnector extends CanalConnector {
         });
     }
 
-    subscribe(filter, callback) {
+    subscribe(filter = '', callback) {
         if (!this.running) return;
 
         waitFor(() => this.connected, () => {
@@ -199,7 +199,7 @@ class SimpleCanalConnector extends CanalConnector {
         });
     }
 
-    get(batchSize, timeout, callback) {
+    get(batchSize = 1000, timeout = -1, callback) {
         this.getWithoutAck(batchSize, timeout, (err, message) => {
             if (err & isFunction(callback)) return callback(err);
 
@@ -209,7 +209,7 @@ class SimpleCanalConnector extends CanalConnector {
         });
     }
 
-    getWithoutAck(batchSize, timeout, callback) {
+    getWithoutAck(batchSize = 1000, timeout = -1, callback) {
         if (!this.running) return callback(null);
 
         waitFor(() => this.connected, () => {
