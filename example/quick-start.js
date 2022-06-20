@@ -1,40 +1,37 @@
-const CanalConnectors = require('../canal-connectors');
-const ProtoUtil = require('../proto-util');
+const CanalConnectors = require('../src/canal-connectors');
+const ProtoUtil = require('../src/proto-util');
 
-;(async function() {
+(async function() {
     await ProtoUtil.load();
 
-    let connector = CanalConnectors.newConnector(process.env.host, process.env.port, 
-            process.env.destination, process.env.username, process.env.password);
+    let connector = CanalConnectors.newConnector('127.0.0.1', 11111, 'example', '', '');
 
-    connector.on('error', console.error);
+    try {
+        await connector.connect();
+        await connector.subscribe('.*\..*');
 
-    connector.connect((err) => {
-        if (err) throw err;
-
-        let callback = (err, message) => {
-            if (err) throw err;
-
+        for (let i = 0; i < 1000; i++) {
+            let message = await connector.getWithoutAck(10, -1);
             let batchId = parseInt(message.id);
-            let size = message.entries.length;
 
-            if (batchId !== -1 && size) {
+            if (batchId !== -1 && message.entries.length) {
                 printEntry(message.entries);
             }
 
-            connector.ack(batchId);
-            setTimeout(connector.getWithoutAck.bind(connector, 10, -1, callback), 3_000);
-        };
+            await connector.ack(batchId);
 
-        connector.subscribe('.*\..*', (err) => {
-            if (err) throw err;
-
-            connector.getWithoutAck(10, -1, callback);
-        });
-        // connector.unsubscribe();
-        // connector.rollback();
-    });
+            await sleep(3000);
+        }
+    } catch(e) {
+        console.error('Connect cancal server occur error', e);
+    } finally {
+        if (connector.isConnect()) connector.disconnect();
+    }
 }) ();
+
+function sleep(millis) {
+    return new Promise((resolve, reject) => setTimeout(resolve, millis));
+}
 
 function printEntry(entries) {
     for (let entry of entries) {
