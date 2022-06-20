@@ -6,9 +6,6 @@ const PSocket = require('./psocket');
 const CanalMessageDeserializer = require('./canal-message-deserializer');
 
 class SimpleCanalConnector extends CanalConnector {
-    connected = false;
-    psocket;
-
     constructor(host, port, destination, username, password) {
         super();
 
@@ -17,6 +14,7 @@ class SimpleCanalConnector extends CanalConnector {
         this.username = username;
         this.password = password;
         this.clientIdentity = {destination, id: 10001, filter: null};
+        this.connected = false;
     }
 
     connect() {
