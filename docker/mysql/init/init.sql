@@ -12,6 +12,6 @@ insert into `user` values(null, 'zhangsan');
 insert into `user` values(null, 'lisi');
 insert into `user` values(null, 'wangwu');
 
-CREATE USER canal IDENTIFIED BY 'canal';  
+CREATE USER canal IDENTIFIED WITH mysql_native_password BY 'canal';  
 GRANT SELECT, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'canal'@'%';
 FLUSH PRIVILEGES;

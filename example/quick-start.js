@@ -11,14 +11,16 @@ const ProtoUtil = require('../src/proto-util');
         await connector.subscribe('.*\..*');
 
         for (let i = 0; i < 1000; i++) {
-            let message = await connector.getWithoutAck(10, -1);
+            let message = await connector.getWithoutAck(5 * 1024, -1);
             let batchId = parseInt(message.id);
 
             if (batchId !== -1 && message.entries.length) {
-                printEntry(message.entries);
+                try {
+                    printEntry(message.entries);
+                } finally {
+                    await connector.ack(batchId);
+                }
             }
-
-            await connector.ack(batchId);
 
             await sleep(3000);
         }
