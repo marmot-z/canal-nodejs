@@ -2,9 +2,14 @@
   "name": "canal-nodejs",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "rollup -c --watch",
+    "build": "rollup -c"
   },
   "keywords": [
     "canal",
@@ -15,5 +20,9 @@
   "dependencies": {
     "async": "^3.2.2",
     "protobufjs": "^6.11.2"
+  },
+  "devDependencies": {
+    "rollup": "^2.77.0",
+    "rollup-plugin-commonjs": "^10.1.0"
   }
 }
