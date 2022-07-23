@@ -2,9 +2,10 @@
   "name": "canal-nodejs",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "canal.js",
   "files": [
-    "dist",
+    "canal.js",
+    "proto",
     "README.md"
   ],
   "scripts": {
