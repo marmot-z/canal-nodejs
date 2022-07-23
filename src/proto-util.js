@@ -1,20 +1,18 @@
 const protobuf = require("protobufjs");
-
+const path = require("path");
 class ProtoUtil {
     static enums = {};
     static loaded = false;
 
     static async load() {
         if (ProtoUtil.loaded) return Promise.resolve();
-
         ProtoUtil.loaded = true;
-
         return Promise.all([
             new Promise((resolve, reject) => 
-                protobuf.load('./proto/canal-protocol.proto', (e, root) => 
+                protobuf.load(path.resolve(__dirname, './proto/canal-protocol.proto'), (e, root) => 
                     e ? reject(e) : resolve(ProtoUtil.initCanalProtobuf(root)))),
             new Promise((resolve, reject) => 
-                protobuf.load('./proto/entry-protocol.proto', (e, root) =>
+                protobuf.load(path.resolve(__dirname, './proto/entry-protocol.proto'), (e, root) =>
                     e ? reject(e) : resolve(ProtoUtil.initEntryProtobuf(root))))
         ]);
     }
