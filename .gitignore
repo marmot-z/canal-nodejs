@@ -1,3 +1,5 @@
 .vscode/
 node_modules/
 docker/canal/example/logs
+docker/canal/example/meta.dat
+docker/canal/logs

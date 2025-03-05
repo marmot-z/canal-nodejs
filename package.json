@@ -1,7 +1,7 @@
 {
   "name": "canal-nodejs",
   "version": "1.0.0",
-  "description": "",
+  "description": "> 此应用是 node js 版本的 [Canal](https://github.com/alibaba/canal) 客户端。 >  > 它可以让你在 node js 环境中对 MySQL 数据库中的数据进行增量订阅 & 消费。更多信息请看 [Canal wiki]( https://github.com/alibaba/canal/wiki)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +13,19 @@
   "author": "zhangxunwei",
   "license": "ISC",
   "dependencies": {
-    "async": "^3.2.2",
+    "async": "^3.2.6",
     "protobufjs": "^6.11.2"
-  }
+  },
+  "directories": {
+    "example": "example"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marmot-z/canal-nodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marmot-z/canal-nodejs/issues"
+  },
+  "homepage": "https://github.com/marmot-z/canal-nodejs#readme"
 }

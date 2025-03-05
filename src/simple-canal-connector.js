@@ -1,14 +1,11 @@
 const net = require('net');
 const async = require('async');
-const CanalConnector = require('./canal-connector');
 const ProtoUtil = require('./proto-util');
 const PSocket = require('./psocket');
 const CanalMessageDeserializer = require('./canal-message-deserializer');
 
-class SimpleCanalConnector extends CanalConnector {
+class SimpleCanalConnector {
     constructor(host, port, destination, username, password) {
-        super();
-
         this.host = host;
         this.port = port;
         this.username = username;
@@ -67,9 +64,11 @@ class SimpleCanalConnector extends CanalConnector {
     }
 
     subscribe(filter) {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            throw new Error('Connection not yet established');
+        }
 
-        let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
+        let requestPacket = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.SUBSCRIPTION,
             body: ProtoUtil.encode(ProtoUtil.enums.Sub, {
                 destination: this.clientIdentity.destination,
@@ -78,32 +77,35 @@ class SimpleCanalConnector extends CanalConnector {
             })
         });
 
-        return new Promise((resolve, reject) => {
-            this.psocket.write(packet)
-                .then(() => {
-                    this.psocket.read()
-                        .then(data => {
-                            let ack = ProtoUtil.decode(ProtoUtil.enums.Ack, 
-                                ProtoUtil.decode(ProtoUtil.enums.Packet, data).body);
-            
-                            if (ack.errorCode > 0) {
-                                reject(new Error(`Failed to subscribe with reason : ${ack.errorMessage}.`));
-                            }
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.psocket.write(requestPacket);
+                const data = await this.psocket.read();
+                
+                let responsePacket, ack;
+                try {
+                    responsePacket = ProtoUtil.decode(ProtoUtil.enums.Packet, data);
+                    ack = ProtoUtil.decode(ProtoUtil.enums.Ack, responsePacket.body);
+                } catch (e) {
+                    throw new Error(`Failed to decode response: ${e.message}`);
+                }
+        
+                if (ack.errorCode > 0) {
+                    throw new Error(`Failed to subscribe with reason: ${ack.errorMessage}`);
+                }
 
-                            this.clientIdentity.filter = filter;
-
-                            resolve();
-                        })
-                        .catch(reject);
-                })
-                .catch(reject);
+                this.clientIdentity.filter = filter;
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 
     unsubscribe() {
         if (!this.connected) throw new Error('Connection not yet established');
 
-        let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
+        let requestPacket = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.UNSUBSCRIPTION,
             body: ProtoUtil.encode(ProtoUtil.enums.Unsub, {
                 destination: this.clientIdentity.destination,
@@ -111,38 +113,41 @@ class SimpleCanalConnector extends CanalConnector {
             })
         });
 
-        return new Promise((resolve, reject) => {
-            this.psocket.write(packet)
-                .then(() => {
-                    this.psocket.read()
-                        .then(data => {
-                            let ack = ProtoUtil.decode(ProtoUtil.enums.Ack, 
-                                ProtoUtil.decode(ProtoUtil.enums.Packet, data).body);
-            
-                            if (ack.errorCode > 0) {
-                                reject(new Error(`Failed to unsubscribe with reason : ${ack.errorMessage}.`));
-                            }
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.psocket.write(requestPacket);
+                const data = await this.psocket.read();
+                
+                let responsePacket, ack;
+                try {
+                    responsePacket = ProtoUtil.decode(ProtoUtil.enums.Packet, data);
+                    ack = ProtoUtil.decode(ProtoUtil.enums.Ack, packet.body);
+                } catch (e) {
+                    throw new Error(`Failed to decode unsubscribe response: ${e.message}`);
+                }
+        
+                if (ack.errorCode > 0) {
+                    throw new Error(`Failed to unsubscribe with reason: ${ack.errorMessage}`);
+                }
 
-                            this.clientIdentity.filter = null;
-
-                            resolve();
-                        })
-                        .catch(reject);
-                })
-                .catch(reject);
+                this.clientIdentity.filter = null;
+                resolve();
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 
     get(batchSize, timeout) {
-        return new Promise((resolve, reject) => {
-            this.getWithoutAck(batchSize, timeout)
-                .then(data => 
-                    this.ack(data.id)
-                        .then(() => resolve(data))
-                        .catch(reject)
-                )
-                .catch(reject);
-        })
+        return new Promise(async (resolve, reject) => {
+            try {
+                const data = await this.getWithoutAck(batchSize, timeout);
+                await this.ack(data.id);
+                resolve(data);
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 
     getWithoutAck(batchSize, timeout) {
@@ -161,20 +166,20 @@ class SimpleCanalConnector extends CanalConnector {
             })
         });
 
-        return new Promise((resolve, reject) => {
-            this.psocket.write(packet)
-                .then(() => {
-                    this.psocket.read()
-                        .then(data => {
-                            try {
-                                resolve(CanalMessageDeserializer.deserializer(data));
-                            } catch(e) {
-                                reject(e);
-                            }
-                        })
-                        .catch(reject)
-                })
-                .catch(reject);
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.psocket.write(packet);
+                const data = await this.psocket.read();
+                
+                try {
+                    const message = CanalMessageDeserializer.deserializer(data);
+                    resolve(message);
+                } catch (e) {
+                    throw new Error(`Failed to deserialize message: ${e.message}`);
+                }
+            } catch (err) {
+                reject(err);
+            }
         });
     }
 
@@ -228,11 +233,14 @@ function handshake(data, callback) {
     if (packet.version != 1) {
         err = new Error('Unsupported version at this client.');
     }
+
     if (packet.type != ProtoUtil.PacketType.values.HANDSHAKE) {
         err = new Error('Expect handshake but found other type.');
     }
 
-    if (err) callback(err);
+    if (err) {
+        callback(err);
+    }
 
     let handshake = ProtoUtil.decode(ProtoUtil.enums.Handshake, packet.body);
     this.supportedCompressions = handshake.supportedCompressions;

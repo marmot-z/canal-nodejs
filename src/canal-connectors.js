@@ -1,4 +1,5 @@
 let SimpleCanalConnector = require('./simple-canal-connector');
+let ProtoUtil = require('./proto-util');
 
 class CanalConnectors {
 
@@ -22,5 +23,7 @@ class CanalConnectors {
         return null;
     }
 }
+
+ProtoUtil.load();
 
 module.exports = CanalConnectors;
