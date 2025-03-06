@@ -2,7 +2,7 @@ const CanalConnectors = require('../src/canal-connectors');
 const ProtoUtil = require('../src/proto-util');
 
 (async function() {
-    let connector = CanalConnectors.newConnector('127.0.0.1', 11111, 'example', '', '');
+    let connector = CanalConnectors.newConnector({host: '127.0.0.1', port: 11111}, 'example', '', '');
 
     try {
         await connector.connect();

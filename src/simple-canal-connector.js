@@ -3,15 +3,21 @@ const async = require('async');
 const ProtoUtil = require('./proto-util');
 const PSocket = require('./psocket');
 const CanalMessageDeserializer = require('./canal-message-deserializer');
+const SimpleNodeAccessStrategy = require('./simple-node-access-strategy');
 
 class SimpleCanalConnector {
-    constructor(host, port, destination, username, password) {
-        this.host = host;
-        this.port = port;
+    constructor(address, username, password, destination, idleTimeout = 60 * 60 * 1000) {
+        if (address instanceof SimpleNodeAccessStrategy) {
+            this.canalNodeAccessStrategy = address;
+        } else {
+            this.canalNodeAccessStrategy = new SimpleNodeAccessStrategy([address]);
+        }
+        
         this.username = username;
         this.password = password;
         this.clientIdentity = {destination, id: 10001, filter: null};
         this.connected = false;
+        this.idleTimeout = idleTimeout;
     }
 
     connect() {
@@ -26,14 +32,15 @@ class SimpleCanalConnector {
     }
 
     _connect() {
+        this.address = this.canalNodeAccessStrategy.nextNode();
         this.psocket = new PSocket(net.createConnection({
-            host: this.host,
-            port: this.port,
+            host: this.address.host,
+            port: this.address.port,
             writable: true,
             readable: true,
             // 以大端的方式读取
             readIntBE: true,
-            timeout: 60 * 60 * 1000
+            timeout: this.idleTimeout
         }));
 
         return new Promise((resolve, reject) => {
@@ -103,7 +110,9 @@ class SimpleCanalConnector {
     }
 
     unsubscribe() {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            throw new Error('Connection not yet established');
+        }
 
         let requestPacket = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.UNSUBSCRIPTION,
@@ -151,7 +160,9 @@ class SimpleCanalConnector {
     }
 
     getWithoutAck(batchSize, timeout) {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            throw new Error('Connection not yet established');
+        }
 
         let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.GET,
@@ -184,7 +195,9 @@ class SimpleCanalConnector {
     }
 
     ack(batchId) {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            throw new Error('Connection not yet established');
+        }
 
         let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.CLIENTACK,
@@ -199,7 +212,9 @@ class SimpleCanalConnector {
     }
 
     rollback(batchId) {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            throw new Error('Connection not yet established');
+        }
 
         let packet = ProtoUtil.encode(ProtoUtil.enums.Packet, {
             type: ProtoUtil.PacketType.values.CLIENTROLLBACK,
@@ -214,7 +229,9 @@ class SimpleCanalConnector {
     }
 
     disconnect() {
-        if (!this.connected) throw new Error('Connection not yet established');
+        if (!this.connected) {
+            return;
+        }
 
         this.psocket.close();
         this.psocket = null;
@@ -223,6 +240,10 @@ class SimpleCanalConnector {
 
     isConnect() {
         return this.connected;
+    }
+
+    getAddress() {
+        return this.address;
     }
 }
 
